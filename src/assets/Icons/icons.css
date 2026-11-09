@@ -1,0 +1,97 @@
+.nova-icon {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  background: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+.nova-icon[data-icon="bag"] {
+  mask-image: url("./bag.svg");
+}
+.nova-icon[data-icon="search"] {
+  mask-image: url("./search.svg");
+}
+.nova-icon[data-icon="sun"] {
+  mask-image: url("./sun.svg");
+}
+.nova-icon[data-icon="moon"] {
+  mask-image: url("./moon.svg");
+}
+.nova-icon[data-icon="globe"] {
+  mask-image: url("./globe.svg");
+}
+.nova-icon[data-icon="menu"] {
+  mask-image: url("./menu.svg");
+}
+.nova-icon[data-icon="box"] {
+  mask-image: url("./box.svg");
+}
+.nova-icon[data-icon="users"] {
+  mask-image: url("./users.svg");
+}
+.nova-icon[data-icon="logout"] {
+  mask-image: url("./logout.svg");
+}
+.nova-icon[data-icon="lock"] {
+  mask-image: url("./lock.svg");
+}
+.nova-icon[data-icon="eye"] {
+  mask-image: url("./eye.svg");
+}
+.nova-icon[data-icon="plus"] {
+  mask-image: url("./plus.svg");
+}
+.nova-icon[data-icon="minus"] {
+  mask-image: url("./minus.svg");
+}
+.nova-icon[data-icon="check"] {
+  mask-image: url("./check.svg");
+}
+.nova-icon[data-icon="x"] {
+  mask-image: url("./x.svg");
+}
+.nova-icon[data-icon="chevron"] {
+  mask-image: url("./chevron.svg");
+}
+.nova-icon[data-icon="down"] {
+  mask-image: url("./down.svg");
+}
+.nova-icon[data-icon="arrow"] {
+  mask-image: url("./arrow.svg");
+}
+.nova-icon[data-icon="trash"] {
+  mask-image: url("./trash.svg");
+}
+.nova-icon[data-icon="star"] {
+  mask-image: url("./star.svg");
+}
+.nova-icon[data-icon="shirt"] {
+  mask-image: url("./shirt.svg");
+}
+.nova-icon[data-icon="laptop"] {
+  mask-image: url("./laptop.svg");
+}
+.nova-icon[data-icon="gem"] {
+  mask-image: url("./gem.svg");
+}
+.nova-icon[data-icon="mail"] {
+  mask-image: url("./mail.svg");
+}
+.nova-icon[data-icon="image"] {
+  mask-image: url("./image.svg");
+}
+.nova-icon[data-icon="info"] {
+  mask-image: url("./info.svg");
+}
+.nova-icon[data-icon="refresh"] {
+  mask-image: url("./refresh.svg");
+}
+.nova-icon[data-icon="shield"] {
+  mask-image: url("./shield.svg");
+}
+.nova-icon[data-icon="grid"] {
+  mask-image: url("./grid.svg");
+}
