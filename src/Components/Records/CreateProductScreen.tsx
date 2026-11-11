@@ -1,14 +1,19 @@
+import { Skeleton } from "@/Shared/Skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { useId, useState } from "react";
+import { useToast } from "@/Shared/Toast";
+import { useQueryRetry } from "@/Utils/api/useQueryRetry";
+import { adminKeys } from "@/Utils/api/query";
+import { applyRecordChange, saveRecord } from "@/Utils/recordChanges";
+import type { Product } from "@/types/product";
 import styled from "styled-components";
 import { categoryLabel, useMessages } from "@/Dictionary/messages";
-import { productCreated, useAppDispatch } from "@/Redux/store";
 import { ROUTES } from "@/Routes/routes";
 import { Banner, Button } from "@/Shared/controls";
 import FormField from "@/Shared/FormField";
 import Icon from "@/Shared/Icon";
-import { getSession } from "@/Storage/session";
-import { isImageUrl } from "@/Utils/format";
-import { getCategories, postProduct } from "@/Utils/services/productApi";
-import { useRequest } from "@/Utils/useRequest";
+import { isImageUrl, isLocalImage } from "@/Utils/format";
+import { getCategories, saveProduct } from "@/Utils/services/productApi";
 import { createProductSchema, parsePrice } from "@/Validations/forms.schema";
 import CreateRecord from "./CreateRecord";
 
@@ -17,27 +22,44 @@ const INITIAL = { title: "", description: "", price: "", category: "", image: ""
 const Grid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) 238px;
-  gap: 24px;
+  gap: 20px;
   align-items: start;
+  @media (max-width: 700px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (max-width: 460px) {
+    .split {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  input[type="file"] {
+    width: 100%;
+    font-size: 12px;
+  }
+  .file-error {
+    min-height: 2.5em;
+    color: var(--error);
+    font-size: 12px;
+  }
   .fields {
     display: grid;
-    gap: 12px;
+    gap: 10px;
   }
   .split {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 10px;
   }
   aside {
-    padding: 14px;
+    padding: 12px;
     display: grid;
     text-align: center;
-    gap: 10px;
+    gap: 8px;
     background: var(--soft);
     border-radius: 12px;
   }
   .preview {
-    height: 138px;
+    height: 126px;
     display: grid;
     place-items: center;
     background: var(--surface);
@@ -53,8 +75,8 @@ const Grid = styled.div`
   img {
     z-index: 1;
     width: 100%;
-    height: 138px;
-    object-fit: cover;
+    height: 126px;
+    object-fit: contain;
   }
   aside strong {
     font-size: 15px;
@@ -65,49 +87,84 @@ const Grid = styled.div`
   }
 `;
 
-export default function CreateProductScreen() {
+interface Props {
+  readonly edit?: { readonly key: string; readonly item: Product };
+  readonly onComplete?: () => void;
+}
+
+export default function CreateProductScreen({ edit, onComplete }: Props) {
   const { m } = useMessages();
-  const dispatch = useAppDispatch();
-  const { result, retry } = useRequest(getCategories);
-  const choices =
-    result.status === "success"
-      ? result.data.map((value) => ({ value, label: categoryLabel(value, m, true) }))
-      : [];
+  const toast = useToast();
+  const fileHelpId = useId();
+  const [fileError, setFileError] = useState(false);
+  const [reading, setReading] = useState(false);
+  const retry = useQueryRetry();
+  const result = useQuery({ queryKey: adminKeys.categories, queryFn: getCategories });
+  const options = result.isFetching || result.isError ? [] : (result.data ?? []);
+  const available =
+    edit && options.length && !options.includes(edit.item.category)
+      ? [...options, edit.item.category]
+      : options;
+  const choices = available.map((value) => ({ value, label: categoryLabel(value, m, true) }));
   return (
     <>
-      {result.status === "error" && (
+      {result.isFetching && (
+        <Skeleton role="status" aria-label={m.loading} style={{ height: 44 }} />
+      )}
+      {!result.isFetching && !choices.length && (
         <>
-          <Banner title={m.productsLoadError} detail={m.requestHelp} />
+          <Banner
+            title={result.isError ? m.productsLoadError : m.emptyCategories}
+            detail={m.requestHelp}
+          />
           <div>
-            <Button $kind="secondary" onClick={retry}>
+            <Button
+              $kind="secondary"
+              onClick={() => void retry(result.refetch, m.productsLoadError)}
+            >
               {m.tryAgain}
             </Button>
           </div>
         </>
       )}
       <CreateRecord
-        initial={INITIAL}
+        initial={
+          edit
+            ? {
+                title: edit.item.title,
+                description: edit.item.description,
+                price: String(edit.item.price),
+                category: edit.item.category,
+                image: edit.item.image,
+              }
+            : INITIAL
+        }
+        onComplete={onComplete}
+        success={edit ? m.updated : m.productCreated}
         schema={createProductSchema(m)}
         listLabel={m.products}
         listPath={ROUTES.products}
         title={m.addProduct}
-        save={m.saveProduct}
-        disabled={!choices.length}
+        save={edit ? m.edit : m.saveProduct}
+        disabled={reading || !choices.length}
         onSave={async (values) => {
-          const session = getSession();
-          const item = await postProduct({
+          const input = {
             title: values.title.trim(),
             description: values.description.trim(),
             price: parsePrice(values.price),
             category: values.category,
             image: values.image.trim(),
-          });
-          if (getSession() === session)
-            dispatch(productCreated({ key: crypto.randomUUID(), item }));
-          return item.title;
+          };
+          const change = await saveRecord(
+            edit,
+            (id) => ({ ...input, id }),
+            (id) => saveProduct(input, id)
+          );
+          if (!applyRecordChange("products", change)) toast(m.storageFull, "warning");
+          return change.item.title;
         }}
       >
-        {({ values, isSubmitting }) => (
+        {({ values, isSubmitting, setFieldValue }) => (
           <Grid>
             <div className="fields">
               <FormField
@@ -134,23 +191,83 @@ export default function CreateProductScreen() {
                 <FormField
                   name="category"
                   label={m.category + " *"}
-                  placeholder={result.status === "loading" ? m.loading : m.chooseCategory}
+                  placeholder={result.isFetching ? m.loading : m.chooseCategory}
                   options={choices}
                   disabled={isSubmitting || !choices.length}
                 />
               </div>
-              <FormField
-                name="image"
-                label={m.imageUrl + " *"}
-                placeholder="https://"
-                type="url"
-                disabled={isSubmitting}
-              />
+              {isLocalImage(values.image) ? (
+                <Button
+                  type="button"
+                  $kind="secondary"
+                  disabled={isSubmitting}
+                  onClick={() => void setFieldValue("image", "")}
+                >
+                  {m.clearImage}
+                </Button>
+              ) : (
+                <FormField
+                  name="image"
+                  label={m.imageUrl + " *"}
+                  placeholder="https://"
+                  type="url"
+                  disabled={isSubmitting || reading}
+                />
+              )}
+              <label>
+                {m.fileUpload}
+                <input
+                  type="file"
+                  aria-describedby={fileHelpId}
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={isSubmitting || reading}
+                  onChange={(event) => {
+                    const input = event.currentTarget;
+                    const file = input.files?.[0];
+                    input.value = "";
+                    if (!file) return;
+                    setFileError(false);
+                    function rejectFile() {
+                      setFileError(true);
+                      toast(m.invalidFile, "error");
+                    }
+                    if (
+                      !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+                      file.size > 2 * 1024 * 1024
+                    ) {
+                      rejectFile();
+                      return;
+                    }
+                    setReading(true);
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                      try {
+                        const source = reader.result;
+                        if (typeof source !== "string" || !isLocalImage(source))
+                          throw new Error("Invalid image");
+                        const image = new Image();
+                        image.src = source;
+                        await image.decode();
+                        await setFieldValue("image", source);
+                      } catch {
+                        rejectFile();
+                      } finally {
+                        setReading(false);
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </label>
+              <small id={fileHelpId}>{m.localImageHelp}</small>
+              <p className="file-error" role="status">
+                {reading ? m.readingImage : fileError && m.invalidFile}
+              </p>
             </div>
             <aside>
               <div className="preview">
                 <Icon name="image" size={28} />
-                {isImageUrl(values.image.trim()) && (
+                {(isImageUrl(values.image.trim()) || isLocalImage(values.image)) && (
                   <img
                     key={values.image}
                     src={values.image.trim()}

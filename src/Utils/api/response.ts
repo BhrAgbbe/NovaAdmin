@@ -34,8 +34,38 @@ export function isCategory(value: unknown): value is string {
 
 export function getRequestError(error: unknown) {
   if (axios.isAxiosError(error)) {
-    if (error.response?.status === 401) return "credentials";
+    if (error.response?.status === 401) return "unauthorized";
+    if (error.response?.status === 403) return "forbidden";
+    if (error.response?.status === 400 || error.response?.status === 422) return "validation";
+    if (!error.response && error.code === "ERR_NETWORK") return "network";
     if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") return "timeout";
   }
   return "request";
+}
+
+export function assertWriteResponse(data: unknown) {
+  if (
+    data === false ||
+    (isRecord(data) &&
+      (data.error ||
+        (Array.isArray(data.errors) ? data.errors.length : data.errors) ||
+        data.success === false ||
+        data.ok === false ||
+        data.status === "error" ||
+        data.status === "failed" ||
+        data.status === "fail" ||
+        (typeof data.statusCode === "number" && data.statusCode >= 400)))
+  )
+    throw new Error("API rejected the operation");
+}
+
+export function readRecordId(data: unknown) {
+  if (
+    !isRecord(data) ||
+    typeof data.id !== "number" ||
+    !Number.isSafeInteger(data.id) ||
+    data.id < 1
+  )
+    throw new Error("Missing record identifier");
+  return data.id;
 }

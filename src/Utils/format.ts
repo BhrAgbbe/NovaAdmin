@@ -25,3 +25,11 @@ export function isImageUrl(value: string) {
     return false;
   }
 }
+
+export function normalizePriceInput(value: string) {
+  return normalizeDigits(value).replace(/[٫,]/g, ".");
+}
+
+export function isLocalImage(value: string) {
+  return /^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/=]+$/i.test(value);
+}

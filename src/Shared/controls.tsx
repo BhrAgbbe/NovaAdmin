@@ -4,6 +4,11 @@ import { Link } from "react-router-dom";
 import Icon, { type IconName } from "./Icon";
 
 type Kind = "primary" | "secondary" | "quiet";
+const backgrounds: Record<Kind, string> = {
+  primary: "var(--brand)",
+  secondary: "var(--surface)",
+  quiet: "var(--soft)",
+};
 const buttonStyles = css<{ $kind?: Kind }>`
   border: 1px solid ${({ $kind }) => ($kind === "secondary" ? "var(--line)" : "transparent")};
   border-radius: 10px;
@@ -14,7 +19,7 @@ const buttonStyles = css<{ $kind?: Kind }>`
   justify-content: center;
   gap: 8px;
   color: ${({ $kind }) => (!$kind || $kind === "primary" ? "var(--on-brand)" : "var(--ink)")};
-  background: ${({ $kind }) => ($kind === "secondary" ? "var(--surface)" : $kind === "quiet" ? "var(--soft)" : "var(--brand)")};
+  background: ${({ $kind }) => backgrounds[$kind ?? "primary"]};
   font-weight: 700;
   font-size: 14px;
   white-space: nowrap;
@@ -59,7 +64,7 @@ const Wordmark = styled.span<{ $inverse?: boolean }>`
 export function Brand({ inverse = false }: { readonly inverse?: boolean }) {
   return (
     <Wordmark $inverse={inverse}>
-      <Icon name="bag" size={24} /> NOVA <small>ADMIN</small>
+      NOVA <Icon name="bag" size={24} />
     </Wordmark>
   );
 }

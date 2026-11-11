@@ -19,6 +19,7 @@ export type IconName =
   | "chevron"
   | "down"
   | "arrow"
+  | "pencil"
   | "trash"
   | "star"
   | "shirt"

@@ -95,3 +95,7 @@
 .nova-icon[data-icon="grid"] {
   mask-image: url("./grid.svg");
 }
+
+.nova-icon[data-icon="pencil"] {
+  mask-image: url("./pencil.svg");
+}

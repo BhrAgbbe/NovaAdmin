@@ -1,11 +1,12 @@
+import { useToast } from "@/Shared/Toast";
 import styled from "styled-components";
 import { useMessages } from "@/Dictionary/messages";
-import { userCreated, useAppDispatch } from "@/Redux/store";
+import { applyRecordChange, saveRecord } from "@/Utils/recordChanges";
+import type { User } from "@/types/user";
 import { ROUTES } from "@/Routes/routes";
 import FormField from "@/Shared/FormField";
-import { getSession } from "@/Storage/session";
 import { normalizeDigits } from "@/Utils/format";
-import { postUser } from "@/Utils/services/userApi";
+import { saveUser } from "@/Utils/services/userApi";
 import { createUserSchema } from "@/Validations/forms.schema";
 import CreateRecord from "./CreateRecord";
 
@@ -13,32 +14,56 @@ const INITIAL = { firstName: "", lastName: "", username: "", email: "", password
 const Fields = styled.div`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 16px;
+  gap: 10px 14px;
+  @media (max-width: 560px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 `;
 
-export default function CreateUserScreen() {
+interface Props {
+  readonly edit?: { readonly key: string; readonly item: User };
+  readonly onComplete?: () => void;
+}
+
+export default function CreateUserScreen({ edit, onComplete }: Props) {
   const { m } = useMessages();
-  const dispatch = useAppDispatch();
+  const toast = useToast();
   return (
     <CreateRecord
-      initial={INITIAL}
-      schema={createUserSchema(m)}
+      initial={
+        edit
+          ? {
+              ...INITIAL,
+              firstName: edit.item.firstName,
+              lastName: edit.item.lastName,
+              username: edit.item.username,
+              email: edit.item.email,
+              phone: edit.item.phone,
+            }
+          : INITIAL
+      }
+      schema={createUserSchema(m, !!edit)}
+      onComplete={onComplete}
+      success={edit ? m.updated : m.userCreated}
       listLabel={m.users}
       listPath={ROUTES.users}
       title={m.addUser}
-      save={m.saveUser}
+      save={edit ? m.edit : m.saveUser}
       onSave={async (values) => {
-        const session = getSession();
-        const item = await postUser({
+        const profile = {
           firstName: values.firstName.trim(),
           lastName: values.lastName.trim(),
           username: values.username.trim(),
           email: values.email.trim(),
-          password: values.password,
           phone: normalizeDigits(values.phone.trim()),
-        });
-        if (getSession() === session) dispatch(userCreated({ key: crypto.randomUUID(), item }));
-        return item.firstName + " " + item.lastName;
+        };
+        const change = await saveRecord(
+          edit,
+          (id) => ({ ...profile, id }),
+          (id) => saveUser({ ...profile, password: values.password }, id)
+        );
+        if (!applyRecordChange("users", change)) toast(m.storageFull, "warning");
+        return change.item.firstName + " " + change.item.lastName;
       }}
     >
       {({ isSubmitting }) => (
@@ -74,8 +99,9 @@ export default function CreateUserScreen() {
           />
           <FormField
             name="password"
-            label={m.password + " *"}
-            placeholder={m.passwordPlaceholder}
+            label={edit ? m.password : m.password + " *"}
+            optional={!!edit}
+            placeholder={edit ? m.optionalPassword : m.passwordPlaceholder}
             type="password"
             autoComplete="new-password"
             disabled={isSubmitting}

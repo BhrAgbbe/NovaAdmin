@@ -6,15 +6,10 @@ import {
   type PayloadAction,
 } from "@reduxjs/toolkit";
 import { useDispatch, useSelector } from "react-redux";
-import type { Product } from "@/types/product";
-import type { User } from "@/types/user";
+import { EMPTY_RECORDS, readRecords, type Records } from "@/Storage/records";
+import { getSession } from "@/Storage/session";
 import type { Locale } from "@/Utils/format";
 import { readPreference, type Mode } from "@/Storage/preferences";
-
-interface Created<T> {
-  readonly key: string;
-  readonly item: T;
-}
 
 export const signedOut = createAction("session/signedOut");
 
@@ -33,7 +28,7 @@ const preferences = createSlice({
 
 const session = createSlice({
   name: "session",
-  initialState: { authenticated: false },
+  initialState: { authenticated: !!getSession() },
   reducers: {
     signedIn(state) {
       state.authenticated = true;
@@ -45,22 +40,13 @@ const session = createSlice({
     }),
 });
 
-const initialRecords: { products: Created<Product>[]; users: Created<User>[] } = {
-  products: [],
-  users: [],
-};
 const records = createSlice({
   name: "records",
-  initialState: initialRecords,
+  initialState: readRecords(),
   reducers: {
-    productCreated(state, action: PayloadAction<Created<Product>>) {
-      state.products.unshift(action.payload);
-    },
-    userCreated(state, action: PayloadAction<Created<User>>) {
-      state.users.unshift(action.payload);
-    },
+    recordsChanged: (_, action: PayloadAction<Records>) => action.payload,
   },
-  extraReducers: (builder) => builder.addCase(signedOut, () => initialRecords),
+  extraReducers: (builder) => builder.addCase(signedOut, () => EMPTY_RECORDS),
 });
 
 const reducer = combineReducers({
@@ -71,6 +57,6 @@ const reducer = combineReducers({
 export const store = configureStore({ reducer });
 export const { setLocale, setMode } = preferences.actions;
 export const { signedIn } = session.actions;
-export const { productCreated, userCreated } = records.actions;
+export const { recordsChanged } = records.actions;
 export const useAppDispatch = useDispatch.withTypes<typeof store.dispatch>();
 export const useAppSelector = useSelector.withTypes<ReturnType<typeof store.getState>>();

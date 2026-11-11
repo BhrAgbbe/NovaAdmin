@@ -1,6 +1,6 @@
 import * as yup from "yup";
 import type { Messages } from "@/Dictionary/messages";
-import { isImageUrl, normalizeDigits } from "@/Utils/format";
+import { isImageUrl, isLocalImage, normalizeDigits, normalizePriceInput } from "@/Utils/format";
 
 export function createLoginSchema(m: Messages) {
   return yup.object({
@@ -10,7 +10,8 @@ export function createLoginSchema(m: Messages) {
 }
 
 export function parsePrice(value: string) {
-  return Number(normalizeDigits(value).trim().replace(/[٬,]/g, "").replace("٫", "."));
+  const normalized = normalizePriceInput(value);
+  return /^\d*\.?\d+$/.test(normalized) ? Number(normalized) : NaN;
 }
 
 export function createProductSchema(m: Messages) {
@@ -29,11 +30,11 @@ export function createProductSchema(m: Messages) {
       .string()
       .trim()
       .required(m.required)
-      .test("image", m.invalidImage, (value) => !value || isImageUrl(value)),
+      .test("image", m.invalidImage, (value) => !value || isImageUrl(value) || isLocalImage(value)),
   });
 }
 
-export function createUserSchema(m: Messages) {
+export function createUserSchema(m: Messages, editing = false) {
   return yup.object({
     firstName: yup.string().trim().required(m.required),
     lastName: yup.string().trim().required(m.required),
@@ -47,6 +48,6 @@ export function createUserSchema(m: Messages) {
         m.invalidPhone,
         (value) => !value || /^\+?[0-9][0-9 ()-]{5,23}$/.test(normalizeDigits(value.trim()))
       ),
-    password: yup.string().required(m.required),
+    password: editing ? yup.string().default("") : yup.string().required(m.required),
   });
 }

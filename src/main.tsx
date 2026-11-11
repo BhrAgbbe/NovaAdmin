@@ -1,3 +1,8 @@
+import { QueryClientProvider } from "@tanstack/react-query";
+import { useMessages } from "@/Dictionary/messages";
+import { ToastProvider } from "@/Shared/Toast";
+import SessionMonitor from "@/Components/Auth/SessionMonitor";
+import { adminQueryClient } from "@/Utils/api/query";
 import { StrictMode, useLayoutEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
@@ -9,6 +14,7 @@ import "@/assets/Fonts/fonts.css";
 import "@/assets/Icons/icons.css";
 
 function App() {
+  const { m } = useMessages();
   const { locale, mode } = useAppSelector((state) => state.preferences);
 
   useLayoutEffect(() => {
@@ -21,7 +27,10 @@ function App() {
   return (
     <>
       <GlobalStyle />
-      <AppRoutes />
+      <ToastProvider closeLabel={m.dismissToast}>
+        <SessionMonitor />
+        <AppRoutes />
+      </ToastProvider>
     </>
   );
 }
@@ -30,7 +39,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
       <BrowserRouter>
-        <App />
+        <QueryClientProvider client={adminQueryClient}>
+          <App />
+        </QueryClientProvider>
       </BrowserRouter>
     </Provider>
   </StrictMode>

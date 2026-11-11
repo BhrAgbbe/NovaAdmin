@@ -2,11 +2,12 @@ import { useField } from "formik";
 import { useId, useState } from "react";
 import styled from "styled-components";
 import { useMessages } from "@/Dictionary/messages";
+import { normalizePriceInput } from "@/Utils/format";
 import Icon from "./Icon";
 
 const Group = styled.div`
   display: grid;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
   position: relative;
   label {
@@ -21,8 +22,8 @@ const Group = styled.div`
     border-radius: 9px;
     background: var(--surface);
     color: var(--ink);
-    min-height: 48px;
-    padding: 10px 12px;
+    min-height: 44px;
+    padding: 9px 12px;
     font-size: 14px;
     &::placeholder {
       color: var(--muted);
@@ -33,7 +34,7 @@ const Group = styled.div`
     }
   }
   textarea {
-    min-height: 100px;
+    min-height: 88px;
     resize: vertical;
   }
   .password-input {
@@ -46,9 +47,42 @@ const Group = styled.div`
     appearance: none;
     padding-inline-end: 36px;
   }
+  @supports (appearance: base-select) {
+    select,
+    select::picker(select) {
+      appearance: base-select;
+    }
+    select {
+      align-items: center;
+    }
+    select::picker-icon {
+      display: none;
+    }
+    select::picker(select) {
+      margin-block: 4px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 4px;
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 6px 24px #0002;
+    }
+    option {
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+    option:hover,
+    option:focus-visible,
+    option:checked {
+      background: var(--soft);
+    }
+  }
+  .required {
+    color: var(--error);
+  }
   .select-icon {
     position: absolute;
-    top: 44px;
+    top: 38px;
     inset-inline-end: 14px;
     color: var(--muted);
     pointer-events: none;
@@ -57,7 +91,7 @@ const Group = styled.div`
   .password-toggle {
     position: absolute;
     inset-inline-end: 3px;
-    top: 30px;
+    top: 26px;
     width: 44px;
     height: 44px;
     border: 0;
@@ -67,7 +101,9 @@ const Group = styled.div`
     place-items: center;
   }
   .field-error {
+    min-height: 1.5em;
     font-size: 12px;
+    line-height: 1.5;
     color: var(--error);
   }
 `;
@@ -80,6 +116,7 @@ interface Props {
   readonly options?: readonly { value: string; label: string }[];
   readonly autoComplete?: string;
   readonly disabled?: boolean;
+  readonly optional?: boolean;
 }
 
 export default function FormField({
@@ -90,8 +127,9 @@ export default function FormField({
   options,
   autoComplete,
   disabled,
+  optional,
 }: Props) {
-  const [field, meta] = useField<string>(name);
+  const [field, meta, helpers] = useField<string>(name);
   const [revealed, setRevealed] = useState(false);
   const { m } = useMessages();
   const id = useId();
@@ -100,7 +138,7 @@ export default function FormField({
     ...field,
     id,
     disabled,
-    required: true,
+    required: !optional,
     "aria-invalid": !!error,
     "aria-describedby": error ? id + "-error" : undefined,
   };
@@ -108,7 +146,15 @@ export default function FormField({
   const latin = type === "email" || type === "url" || type === "tel";
   return (
     <Group>
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>
+        {label.replace(/ \*$/, "")}
+        {label.endsWith(" *") && (
+          <span className="required" aria-hidden="true">
+            {" "}
+            *
+          </span>
+        )}
+      </label>
       {options ? (
         <>
           <select {...shared}>
@@ -134,6 +180,14 @@ export default function FormField({
           inputMode={type === "decimal" ? "decimal" : undefined}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          onChange={(event) => {
+            if (type !== "decimal") {
+              field.onChange(event);
+              return;
+            }
+            const value = event.currentTarget.value;
+            if (/^\d*\.?\d*$/.test(normalizePriceInput(value))) void helpers.setValue(value);
+          }}
         />
       )}
       {password && (
@@ -148,11 +202,9 @@ export default function FormField({
           <Icon name="eye" size={17} />
         </button>
       )}
-      {error && (
-        <span className="field-error" id={id + "-error"}>
-          {error}
-        </span>
-      )}
+      <span className="field-error" id={id + "-error"}>
+        {error}
+      </span>
     </Group>
   );
 }
