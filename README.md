@@ -2,26 +2,11 @@
 
 NOVA’s administration panel for desktop and mobile. The app uses React 19, Vite, strict TypeScript, Redux Toolkit, TanStack Query, Axios, Styled Components, Formik, and Yup. It supports Persian RTL, English LTR, and light and dark themes.
 
-[Admin Figma](https://www.figma.com/design/p5N8A2My9IWXhT2wmiH4gg/NOVA-%E2%80%94-Admin-UI-Design?node-id=5-191) · [Frame and state map](docs/figma-handoff.md) · [Screenshots](docs/screenshots)
-
 ## Run locally
 
 Use Node 24.18.0 and pnpm 10.14.0.
 
-```powershell
-pnpm install --frozen-lockfile
-Copy-Item .env.example .env.local
-pnpm dev
-```
-
 Open [http://127.0.0.1:5173](http://127.0.0.1:5173). The example environment points to FakeStoreAPI. Use a public demo user from the API provider’s test data. The demo login survives a refresh in the same tab. Set `VITE_FAKE_STORE_API_URL` to the FakeStoreAPI origin or a contract-compatible test endpoint. Production hosting for the built SPA needs an `index.html` rewrite for deep links.
-
-```powershell
-pnpm typecheck
-pnpm lint
-pnpm build
-pnpm start
-```
 
 ## Architecture
 
