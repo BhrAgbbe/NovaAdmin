@@ -77,7 +77,7 @@ export default function ProductsScreen() {
         {
           label: m.price,
 
-          render: (item) => <strong>{formatPrice(item.price, locale)}</strong>,
+          render: (item) => <strong>{formatPrice(item.price, locale, m.currencyUnit)}</strong>,
         },
       ]}
     />

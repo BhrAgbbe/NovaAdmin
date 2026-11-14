@@ -12,6 +12,9 @@ import { store, useAppSelector } from "@/Redux/store";
 import { GlobalStyle } from "@/Shared/GlobalStyle";
 import "@/assets/Fonts/fonts.css";
 import "@/assets/Icons/icons.css";
+import { installInterceptors } from "@/Utils/api/interceptors";
+
+installInterceptors();
 
 function App() {
   const { m } = useMessages();

@@ -259,7 +259,6 @@ export default function CreateProductScreen({ edit, onComplete }: Props) {
                   }}
                 />
               </label>
-              <small id={fileHelpId}>{m.localImageHelp}</small>
               <p className="file-error" role="status">
                 {reading ? m.readingImage : fileError && m.invalidFile}
               </p>

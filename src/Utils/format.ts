@@ -6,8 +6,8 @@ export function formatNumber(value: number, locale: Locale) {
   return new Intl.NumberFormat(localeTag[locale], { maximumFractionDigits: 2 }).format(value);
 }
 
-export function formatPrice(value: number, locale: Locale) {
-  return formatNumber(value, locale) + (locale === "fa" ? " تومان" : " toman");
+export function formatPrice(value: number, locale: Locale, unit: string) {
+  return formatNumber(value, locale) + " " + unit;
 }
 
 export function normalizeDigits(value: string) {
