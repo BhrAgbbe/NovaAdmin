@@ -111,6 +111,9 @@ export default function CreateUserScreen({ edit, onComplete }: Props) {
             label={m.phone + " *"}
             placeholder={m.phonePlaceholder}
             type="tel"
+            inputMode="numeric"
+            maxLength={11}
+            pattern="09[0-9]{9}"
             autoComplete="tel"
             disabled={isSubmitting}
           />

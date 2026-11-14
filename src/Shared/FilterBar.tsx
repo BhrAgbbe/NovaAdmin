@@ -50,14 +50,19 @@ const controlStyles = `
   font: inherit;
   font-size: 14px;
   font-weight: 400;
+  line-height: 1.5;
+  box-sizing: border-box;
 `;
 
 export const FilterInput = styled.input`
   ${controlStyles}
+  &:hover:not(:disabled) {
+    border-color: var(--focus);
+  }
   &:focus-visible {
     border-color: var(--focus);
     outline: 2px solid var(--focus);
-    outline-offset: 1px;
+    outline-offset: -2px;
   }
 `;
 
@@ -71,10 +76,13 @@ const SearchControl = styled.span`
   border-radius: 10px;
   background: var(--surface);
   color: var(--muted);
+  &:hover {
+    border-color: var(--focus);
+  }
   &:focus-within {
     border-color: var(--focus);
     outline: 2px solid var(--focus);
-    outline-offset: 1px;
+    outline-offset: -2px;
   }
   input {
     flex: 1;
@@ -87,6 +95,7 @@ const SearchControl = styled.span`
     color: var(--ink);
     font: inherit;
     font-size: 14px;
+    line-height: 1.5;
   }
   input::placeholder {
     color: var(--muted);

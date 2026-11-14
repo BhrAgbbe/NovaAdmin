@@ -29,13 +29,17 @@ const Field = styled.select`
   font: inherit;
   font-size: 14px;
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1.5;
+  box-sizing: border-box;
   text-align: start;
   cursor: pointer;
+  &:hover:not(:disabled) {
+    border-color: var(--focus);
+  }
   &:focus-visible {
     border-color: var(--focus);
     outline: 2px solid var(--focus);
-    outline-offset: 1px;
+    outline-offset: -2px;
   }
   @supports (appearance: base-select) {
     &,

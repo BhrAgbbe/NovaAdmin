@@ -46,7 +46,7 @@ export function createUserSchema(m: Messages, editing = false) {
       .test(
         "phone",
         m.invalidPhone,
-        (value) => !value || /^\+?[0-9][0-9 ()-]{5,23}$/.test(normalizeDigits(value.trim()))
+        (value) => !value || /^09\d{9}$/.test(normalizeDigits(value.trim()))
       ),
     password: editing ? yup.string().default("") : yup.string().required(m.required),
   });

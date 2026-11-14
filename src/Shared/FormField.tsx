@@ -2,7 +2,7 @@ import { useField } from "formik";
 import { useId, useState } from "react";
 import styled from "styled-components";
 import { useMessages } from "@/Dictionary/messages";
-import { normalizePriceInput } from "@/Utils/format";
+import { normalizeDigits, normalizePriceInput } from "@/Utils/format";
 import Icon from "./Icon";
 
 const Group = styled.div`
@@ -25,12 +25,22 @@ const Group = styled.div`
     min-height: 44px;
     padding: 9px 12px;
     font-size: 14px;
+    line-height: 1.5;
+    box-sizing: border-box;
     &::placeholder {
       color: var(--muted);
       opacity: 1;
     }
     &[aria-invalid="true"] {
       border-color: var(--error);
+    }
+    &:hover:not(:disabled) {
+      border-color: var(--focus);
+    }
+    &:focus-visible {
+      border-color: var(--focus);
+      outline: 2px solid var(--focus);
+      outline-offset: -2px;
     }
   }
   textarea {
@@ -41,7 +51,7 @@ const Group = styled.div`
     padding-inline-end: 48px;
   }
   [dir="rtl"] & input[dir="ltr"] {
-    text-align: right;
+    text-align: start;
   }
   select {
     appearance: none;
@@ -117,6 +127,9 @@ interface Props {
   readonly autoComplete?: string;
   readonly disabled?: boolean;
   readonly optional?: boolean;
+  readonly inputMode?: "text" | "numeric" | "decimal" | "tel" | "email" | "url";
+  readonly maxLength?: number;
+  readonly pattern?: string;
 }
 
 export default function FormField({
@@ -128,6 +141,9 @@ export default function FormField({
   autoComplete,
   disabled,
   optional,
+  inputMode,
+  maxLength,
+  pattern,
 }: Props) {
   const [field, meta, helpers] = useField<string>(name);
   const [revealed, setRevealed] = useState(false);
@@ -177,10 +193,19 @@ export default function FormField({
           className={password ? "password-input" : undefined}
           dir={latin ? "ltr" : undefined}
           type={type === "decimal" || (password && revealed) ? "text" : type}
-          inputMode={type === "decimal" ? "decimal" : undefined}
+          inputMode={type === "decimal" ? "decimal" : type === "tel" ? inputMode ?? "tel" : inputMode}
+          maxLength={maxLength}
+          pattern={pattern}
           placeholder={placeholder}
           autoComplete={autoComplete}
           onChange={(event) => {
+            if (type === "tel") {
+              const value = normalizeDigits(event.currentTarget.value)
+                .replace(/\D/g, "")
+                .slice(0, maxLength ?? 11);
+              void helpers.setValue(value);
+              return;
+            }
             if (type !== "decimal") {
               field.onChange(event);
               return;
